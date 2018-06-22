@@ -1,9 +1,13 @@
-<?php include("./lib/swift_required.php"); ?>
+
+
 
 <?php
     global $connection;
     global $error1, $error2, $error3, $error4, $error5;
     global $info, $fail;
+
+require_once __DIR__ . '/../vendor/swiftmailer/swiftmailer/lib/classes/Swift.php';
+Swift::registerAutoload();
 
 $f_name = $l_name = $email = $password = "";
 
@@ -29,7 +33,7 @@ if(isset($_POST['submit'])){
                 $l_name = ucwords(mysqli_real_escape_string($connection, $lastname));
                 $email = mysqli_real_escape_string($connection, $email);
                 $password = mysqli_real_escape_string($connection, $pass_word);
-              
+
 
           if(!filter_var($email,FILTER_VALIDATE_EMAIL)){
                 $error2 = "<div class='alert alert-danger'>
@@ -53,35 +57,36 @@ if(isset($_POST['submit'])){
 
           if((preg_match("/^[a-zA-Z ]*$/", $f_name)) && (preg_match("/^[a-zA-Z ]*$/", $l_name)) &&
           (filter_var($email, FILTER_VALIDATE_EMAIL)) && (preg_match('/^\S*(?=\S{7,15})(?=\S*[a-z])(?=\S*[A-Z])(?=\S*[\d])\S*$/', $pass_word))){
-                
 
-  					$user_activation_key = md5(rand().time());
-                    
-					$sql = "INSERT INTO signup(email, firstname, lastname, password, activation_key, is_active, date_time) VALUES('{$email}', '{$f_name}', '{$l_name}', '{$password}', '{$user_activation_key}', '0', now())";    
-					$query = mysqli_query($connection, $sql);
+
+                      $user_activation_key = md5(rand().time());
+
+                    $sql = "INSERT INTO signup(email, firstname, lastname, password, activation_key, is_active, date_time) VALUES('{$email}', '{$f_name}', '{$l_name}', '{$password}', '{$user_activation_key}', '0', now())";
+                    $query = mysqli_query($connection, $sql);
 
 
 
                     if(!$query){
                         die("QUERY FAILED " . mysqli_error($connection));
                     }
-              
+
               if($query){
-                  
+
                   $msg = "Please activate your account using this link <a
                   href='http://localhost/crud/user/user_activation.php?
-                  key=".$user_activation_key."'>http://localhost/crud/user/user_activation.php?
-                  key=".$user_activation_key."</a>";
-                  
-                  
+                  key=".$user_activation_key."'>http://localhost/crud/user/user_activation.php key=".$user_activation_key."</a>";
+
+
                   //Create the Transport that calls setUsername() and setPassword()
                   //$transport = Swift_SmtpTransport::newInstance('smtp.gmail.com', 465, 'ssl')
-                   $transport = (new Swift_SmtpTransport('smtp.gmail.com', 465, 'ssl'))
-                   
-                        ->setUsername('kettlebell4power@gmail.com')
-                        ->setPassword('Jumpstart613');
-                  $mailer = new Swift_Mailer($transport);
+                   $transport = (new Swift_SmtpTransport('smtp.gmail.com', 465, 'ssl'));
+                        ->setUsername('kettlebell4power@gmail.com') 
+                        ->setPassword('Jumpstart613')
+                        ;
+                 // $mailer = new Swift_Mailer($transport); from Eddie 6/21/2018
                   //$mailer = (new Swift_Mailer($transport));
+                  $mailer = new Swift_Mailer($transport);
+                   
                   //$mailer = Swift_Mailer::newInstance($transport); old version code *important
                     // Create the message
                     //$message = Swift_Message::newInstance('Test')
@@ -99,35 +104,36 @@ if(isset($_POST['submit'])){
                     // Optionally add any attachments
                     $result = $mailer->send($message);
                           */
-                  
+
                   $msg = "This is a test message";
                   // Create a message
                   $message = (new Swift_Message($msg))
                     ->setSubject('Verify Your Email Address')
                     ->setFrom(['kettlebell4power@gmail.com' => 'Louis Test'])
-                    ->setTo(['llieberman@ritehite.com' => 'Louis Alert'])
+                    ->setTo(['kettlebell4power@gmail.com','llieberman@ritehite.com' => 'Louis Alert'])
                     ->setBody('Here is the message itself')
-                    ->addPart($msg, 'text/html');
+                    //->addPart($msg, 'text/html')
+                      ;
                 // Send the message
                   $result = $mailer->send($message);
-                      
+
                   if(!$result){
                    $fail = "<div class='alert alert-danger email_alert'>
                   <a href='#' class='close' data-dismiss='alert' aria-label='close'>&times</a>
                   Failed to send verification email.</div>";
                   }else{
-                      
+
                     $info = "<div class='alert alert-info email_alert'>
                   <a href='#' class='close' data-dismiss='alert' aria-label='close'>&times</a>
                   A verification email has been sent.</div>";
           }
                   }
-          }   
-                      
-                  
+          }
+
+
         }
-                          
-        
+
+
 
     }else{
 
